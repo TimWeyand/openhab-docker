@@ -1,4 +1,5 @@
 sudo: required
+group: deprecated-2017Q2
 language: bash
 branches:
   only:
@@ -8,7 +9,12 @@ services:
 before_install:
   - docker info
   - docker run --rm --privileged multiarch/qemu-user-static:register --reset
-  - docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+install:
+  - docker build --build-arg VCS_REF=$TRAVIS_COMMIT --build-arg BUILD_DATE=$(date +"%Y-%m-%dT%H:%M:%SZ") -t $DOCKER_REPO:$VERSION-$TARGET-$DIST $VERSION/$TARGET/$DIST
+  - docker run --rm $DOCKER_REPO:$VERSION-$TARGET-$DIST uname -a
+after_success:
+  - docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
+  - docker push $DOCKER_REPO:$VERSION-$TARGET-$DIST
 env:
   #global:
   # -  DOCKER_REPO=openhab/openhab
@@ -17,13 +23,29 @@ env:
   # -  DOCKER_USERNAME
   # -  DOCKER_PASSWORD
   matrix:
-    - TARGET=amd64 FLAVOR=online
-    - TARGET=amd64 FLAVOR=offline
-    - TARGET=armhf FLAVOR=online
-    - TARGET=armhf FLAVOR=offline
-    - TARGET=arm64 FLAVOR=online
-    - TARGET=arm64 FLAVOR=offline
+    - DIST=debian TARGET=amd64 VERSION=1.8.3
+    - DIST=debian TARGET=armhf VERSION=1.8.3
+    - DIST=debian TARGET=arm64 VERSION=1.8.3
+    - DIST=debian TARGET=amd64 VERSION=2.0.0
+    - DIST=debian TARGET=armhf VERSION=2.0.0
+    - DIST=debian TARGET=arm64 VERSION=2.0.0
+    - DIST=debian TARGET=amd64 VERSION=2.1.0
+    - DIST=debian TARGET=armhf VERSION=2.1.0
+    - DIST=debian TARGET=arm64 VERSION=2.1.0
+    - DIST=debian TARGET=amd64 VERSION=2.2.0-snapshot
+    - DIST=debian TARGET=armhf VERSION=2.2.0-snapshot
+    - DIST=debian TARGET=arm64 VERSION=2.2.0-snapshot
+    - DIST=alpine TARGET=amd64 VERSION=1.8.3
+    - DIST=alpine TARGET=armhf VERSION=1.8.3
+    - DIST=alpine TARGET=arm64 VERSION=1.8.3
+    - DIST=alpine TARGET=amd64 VERSION=2.0.0
+    - DIST=alpine TARGET=armhf VERSION=2.0.0
+    - DIST=alpine TARGET=arm64 VERSION=2.0.0
+    - DIST=alpine TARGET=amd64 VERSION=2.1.0
+    - DIST=alpine TARGET=armhf VERSION=2.1.0
+    - DIST=alpine TARGET=arm64 VERSION=2.1.0
+    - DIST=alpine TARGET=amd64 VERSION=2.2.0-snapshot
+    - DIST=alpine TARGET=armhf VERSION=2.2.0-snapshot
+    - DIST=alpine TARGET=arm64 VERSION=2.2.0-snapshot
 matrix:
   fast_finish: true
-script:
-  - make build && (make push || (sleep 15; make push) || (sleep 15; make push))
